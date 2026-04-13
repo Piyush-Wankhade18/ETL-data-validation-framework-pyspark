@@ -1,0 +1,1 @@
+# I created a pytest-based test suite that validates all ETL checks like row count, null, duplicates, data comparison, and aggregates using sample PySpark DataFrames. These tests are integrated into CI/CD pipelines.”
