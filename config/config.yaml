@@ -1,0 +1,93 @@
+project:
+  name: etl-data-validation-framework
+  environment: dev   # dev / qa / prod
+
+# -----------------------------------
+# SOURCE CONFIGURATION
+# -----------------------------------
+source:
+  type: table
+  format: delta        # delta / parquet / jdbc
+  name: source_db.customer_source
+  options:
+    url: ""            # required if jdbc
+    user: ""
+    password: ""
+
+# -----------------------------------
+# TARGET CONFIGURATION
+# -----------------------------------
+target:
+  type: table
+  format: delta
+  name: target_db.customer_target
+  options:
+    url: ""
+    user: ""
+    password: ""
+
+# -----------------------------------
+# VALIDATION CONFIG
+# -----------------------------------
+validation:
+  primary_key: customer_id
+  columns:
+    - customer_id
+    - name
+    - amount
+    - updated_date
+
+# -----------------------------------
+# CHECKS ENABLE/DISABLE
+# -----------------------------------
+checks:
+  row_count: true
+  data_compare: true
+  null_check: true
+  duplicate_check: true
+  aggregate_check: true
+  column_check: true
+
+# -----------------------------------
+# COLUMN LEVEL VALIDATION
+# -----------------------------------
+column_validation:
+  columns_to_compare:
+    - name
+    - amount
+
+# -----------------------------------
+# AGGREGATE VALIDATION
+# -----------------------------------
+aggregate:
+  column: amount
+  function: sum
+
+# -----------------------------------
+# INCREMENTAL LOAD (WATERMARK)
+# -----------------------------------
+watermark:
+  enabled: true
+  column: updated_date
+  last_value: "2026-04-01 10:00:00"
+
+# -----------------------------------
+# LOGGING CONFIG
+# -----------------------------------
+logging:
+  level: INFO
+  log_file: logs/etl_validation.log
+
+# -----------------------------------
+# REPORT CONFIG
+# -----------------------------------
+report:
+  output_path: reports/validation_report.html
+  include_timestamp: true
+
+# -----------------------------------
+# PERFORMANCE CONFIG (OPTIONAL)
+# -----------------------------------
+performance:
+  repartition: 4
+  cache_data: true
