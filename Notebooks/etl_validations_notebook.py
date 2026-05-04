@@ -1,12 +1,11 @@
 --It’s used in Databricks for interactive validation and debugging ETL pipelines.--
-1: Read Raw Data (Bronze Layer)
+#1: Read Raw Data (Bronze Layer)
 
 df_raw = spark.read.format("delta").load("/mnt/bronze/customer_data")
 
 display(df_raw)
 
-________________________________________
-2: Data Cleaning (Null Handling)
+#2: Data Cleaning (Null Handling)
 from pyspark.sql.functions import col
 
 df_clean = df_raw.dropDuplicates()
@@ -14,21 +13,21 @@ df_clean = df_raw.dropDuplicates()
 df_clean = df_clean.filter(col("customer_id").isNotNull())
 
 display(df_clean)
-________________________________________
-3: Data Standardization
+
+#3: Data Standardization
 from pyspark.sql.functions import upper, trim
 
 df_std = df_clean.withColumn("name", upper(trim(col("name"))))
-________________________________________
-4: Derived Columns
+
+#4: Derived Columns
 from pyspark.sql.functions import when
 
 df_enriched = df_std.withColumn(
     "customer_type",
     when(col("amount") > 1000, "HIGH_VALUE").otherwise("NORMAL")
 )
-________________________________________
-5: Incremental Load (Watermark Logic)
+
+#5: Incremental Load (Watermark Logic)
 last_watermark = "2026-04-01 10:00:00"
 
 df_incremental = df_enriched.filter(
@@ -43,8 +42,8 @@ df_joined = df_incremental.join(
     df_incremental.country_code == df_country.country_code,
     "left"
 )
-________________________________________
-7: Aggregation (Business Metrics)
+
+#7: Aggregation (Business Metrics)
 from pyspark.sql.functions import sum, count
 
 df_agg = df_joined.groupBy("country_name") \
@@ -54,8 +53,8 @@ df_agg = df_joined.groupBy("country_name") \
     )
 
 display(df_agg)
-________________________________________
-8: Window Function (Latest Record)
+
+#8: Window Function (Latest Record)
 from pyspark.sql.window import Window
 from pyspark.sql.functions import row_number
 
@@ -66,13 +65,13 @@ df_latest = df_joined.withColumn("rn", row_number().over(window_spec)) \
     .drop("rn")
 
 display(df_latest)
-________________________________________
+
 9: Write to Silver Layer
 df_latest.write.format("delta") \
     .mode("overwrite") \
     .save("/mnt/silver/customer_data")
-________________________________________
-10: Merge into Gold Table (UPSERT)
+
+#10: Merge into Gold Table (UPSERT)
 from delta.tables import DeltaTable
 
 target = DeltaTable.forPath(spark, "/mnt/gold/customer_gold")
